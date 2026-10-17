@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#ff86b7">
+<title>Собери сердечки для Дианы 💖</title>
+<style>
+  :root { --pink:#ff72ad; --deep:#ed4f91; --cream:#fff7fb; --ink:#63334f; --mint:#a6f0df; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; min-height:100%; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); }
+  body { min-height:100svh; display:grid; place-items:center; padding:12px; overflow:hidden;
+    background:radial-gradient(circle at 20% 10%,#fff 0 3%,transparent 4%),linear-gradient(145deg,#ffd8e9,#fff0f7 55%,#dffaf4); }
+  button { font:inherit; border:0; cursor:pointer; touch-action:manipulation; }
+  .app { width:min(100%,520px); }
+  .top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 4px 10px; }
+  .brand { font-weight:900; font-size:clamp(17px,4.5vw,22px); letter-spacing:-.5px; }
+  .pill { border:2px solid #fff; background:#ffffffb8; border-radius:999px; padding:7px 12px; font-weight:800; white-space:nowrap; box-shadow:0 3px 0 #edb3ce; }
+  .panel { background:#ffffffd9; border:3px solid white; border-radius:28px; padding:clamp(16px,4vw,24px); box-shadow:0 12px 0 #eeb6d0,0 22px 45px #bb649533; }
+  h1,h2,p { margin-top:0; }
+  h1 { font-size:clamp(28px,7.5vw,40px); line-height:1.06; letter-spacing:-1.2px; margin-bottom:12px; }
+  h2 { font-size:clamp(24px,6.5vw,34px); margin-bottom:10px; }
+  .lead { line-height:1.55; margin-bottom:20px; font-size:16px; }
+  .hero { font-size:72px; line-height:1.2; text-align:center; filter:drop-shadow(0 7px 0 #ffc1dc); animation:bob 2s ease-in-out infinite; }
+  .primary { width:100%; padding:15px 18px; color:white; font-weight:900; font-size:18px; border-radius:16px; background:linear-gradient(135deg,#ff83b7,#ed4f91); box-shadow:0 5px 0 #c93f79; }
+  .primary:active { transform:translateY(3px); box-shadow:0 2px 0 #c93f79; }
+  .secondary { background:#fff; color:var(--deep); border:2px solid #ffc0dc; border-radius:13px; padding:10px 14px; font-weight:800; }
+  .game-panel { padding:12px; }
+  .hud { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:10px; }
+  .hud .pill { text-align:center; padding:8px 4px; font-size:clamp(12px,3.4vw,15px); }
+  .progress { height:10px; background:#ffe0ed; border-radius:99px; overflow:hidden; margin:0 2px 10px; }
+  .progress > div { height:100%; width:0; background:linear-gradient(90deg,#ff8ab9,#ff4f95); border-radius:99px; transition:width .18s; }
+  canvas { display:block; width:100%; height:min(56svh,470px); min-height:300px; border:3px solid #fff; border-radius:22px; background:#dff9f4; touch-action:none; box-shadow:inset 0 0 0 2px #b9eee2; }
+  .help { font-size:13px; text-align:center; margin:10px 4px 0; line-height:1.4; }
+  .game-actions { display:flex; justify-content:center; margin-top:10px; }
+  .hidden { display:none !important; }
+  .result { text-align:center; }
+  .result .hero { font-size:84px; }
+  .final-message { font-size:17px; line-height:1.55; white-space:pre-line; margin:12px 0 22px; }
+  .tiny { color:#93627c; font-size:12px; margin:12px 0 0; text-align:center; }
+  .toast { min-height:20px; text-align:center; font-weight:800; color:#c83f7d; font-size:13px; margin-top:7px; }
+  @keyframes bob { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-8px) rotate(3deg)} }
+  @media (max-height:700px) { body{padding:7px}.top{margin-bottom:6px}.panel{padding:14px}.hero{font-size:54px}canvas{height:48svh;min-height:250px}.lead{margin-bottom:10px} }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} }
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="top">
+    <div class="brand">💗 Для Дианы</div>
+    <div class="pill">Милота: MAX</div>
+  </div>
+
+  <section id="start" class="panel">
+    <div class="hero" aria-hidden="true">🧸💖🌸</div>
+    <h1>Диана, лови сердечки!</h1>
+    <p class="lead">Специальная праздничная игра для тебя ✨ Лови розовые сердечки корзинкой, уворачивайся от тучек и набери <b>45 сердечек</b> за <b>2 минуты</b>, чтобы открыть поздравление!</p>
+    <button id="startBtn" class="primary">Начать игру 💞</button>
+    <p class="tiny">Подсказка: просто води пальцем влево и вправо по экрану.</p>
+  </section>
+
+  <section id="playing" class="panel game-panel hidden">
+    <div class="hud">
+      <div class="pill">💖 <span id="score">0</span>/<span id="target">45</span></div>
+      <div class="pill">⏱️ <span id="time">120</span> сек</div>
+      <div class="pill">⭐ <span id="best">0</span></div>
+    </div>
+    <div class="progress"><div id="progressFill"></div></div>
+    <canvas id="game" aria-label="Игровое поле: лови падающие сердечки"></canvas>
+    <div class="toast" id="toast" aria-live="polite">Диана, погнали! 💕</div>
+    <div class="game-actions"><button id="pauseBtn" class="secondary">Пауза Ⅱ</button></div>
+    <p class="help">☝️ Веди пальцем по полю — корзинка последует за тобой. Лови 💖 и избегай ☁️!</p>
+  </section>
+
+  <section id="result" class="panel result hidden">
+    <div class="hero" id="resultEmoji">🎉💖🎉</div>
+    <h2 id="resultTitle">Ты собрала все сердечки!</h2>
+    <p id="finalMessage" class="final-message"></p>
+    <button id="againBtn" class="primary">Сыграть ещё раз 🔁</button>
+    <p class="tiny">Этот маленький подарок создан специально для тебя 💝</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const startScreen = $("start"), playScreen = $("playing"), resultScreen = $("result");
+  const canvas = $("game"), ctx = canvas.getContext("2d");
+  
+  const TARGET = 45; // Увеличенное количество сердечек
+  const ROUND_SECONDS = 120;
+  const RECIPIENT_NAME = "Диана";
+
+  let W = 320, H = 420, dpr = 1, running = false, paused = false, raf = 0;
+  let score = 0, timeLeft = ROUND_SECONDS, lastTime = 0, spawnTimer = 0, items = [], particles = [];
+  let player = {x:160,y:370,tx:160,ty:370};
+  let bestScore = 0;
+
+  try { bestScore = Number(localStorage.getItem("heartCatchBest_Diana") || 0); } catch (_) {}
+  $("best").textContent = bestScore;
+  $("target").textContent = TARGET;
+
+  function show(which) {
+    startScreen.classList.toggle("hidden", which !== "start");
+    playScreen.classList.toggle("hidden", which !== "playing");
+    resultScreen.classList.toggle("hidden", which !== "result");
+  }
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = rect.width; H = rect.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    player.x = Math.min(Math.max(player.x,30),W-30);
+    player.y = H-42;
+    player.tx = Math.min(Math.max(player.tx,30),W-30);
+    player.ty = player.y;
+    draw();
+  }
+
+  function roundedRect(x,y,w,h,r,fill) {
+    ctx.fillStyle = fill; ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.fill();
+  }
+
+  function drawBackground() {
+    const grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,"#dffaf4"); grad.addColorStop(1,"#fff3f9");
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle="#c5f3e6"; ctx.beginPath(); ctx.ellipse(W*.16,H+8,W*.52,H*.18,0,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#b0ebdc"; ctx.beginPath(); ctx.ellipse(W*.83,H+15,W*.52,H*.21,0,Math.PI,Math.PI*2); ctx.fill();
+    for(let i=0;i<13;i++){
+      const x=(i*83+27)%W, y=(i*67+23)%(H-40);
+      ctx.globalAlpha=.55; ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(x,y,2+(i%3),0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+    }
+  }
+
+  function drawHeart(x,y,size,color="#ff5c9a") {
+    ctx.save(); ctx.translate(x,y); ctx.scale(size/20,size/20);
+    ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(0,7);
+    ctx.bezierCurveTo(-20,-5,-10,-18,0,-9); ctx.bezierCurveTo(10,-18,20,-5,0,7);
+    ctx.fill(); ctx.restore();
+  }
+
+  function drawItem(item) {
+    if(item.type==="heart") {
+      drawHeart(item.x,item.y,item.size,item.color);
+      ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(item.x-4,item.y-4,2,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.fillStyle="#a5b0c7"; ctx.beginPath();
+      ctx.arc(item.x-8,item.y+2,9,0,Math.PI*2); ctx.arc(item.x+2,item.y-3,12,0,Math.PI*2); ctx.arc(item.x+12,item.y+3,8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="#e5e8f0"; ctx.beginPath(); ctx.arc(item.x-1,item.y-7,3,0,Math.PI*2); ctx.fill();
+    }
+  }
+
+  function drawPlayer() {
+    ctx.save(); ctx.translate(player.x,player.y);
+    ctx.strokeStyle="#ad7954"; ctx.lineWidth=4; ctx.lineCap="round";
+    ctx.beginPath(); ctx.arc(0,-2,19,Math.PI,Math.PI*2); ctx.stroke();
+    roundedRect(-24,-4,48,22,7,"#dca16e");
+    ctx.strokeStyle="#b8794e"; ctx.lineWidth=2;
+    for(let x=-13;x<=13;x+=9){ctx.beginPath();ctx.moveTo(x,-2);ctx.lineTo(x,15);ctx.stroke();}
+    ctx.strokeStyle="#b8794e";ctx.beginPath();ctx.moveTo(-22,5);ctx.lineTo(22,5);ctx.stroke();
+    drawHeart(-7,-7,12,"#ff5c9a"); drawHeart(7,-8,11,"#ff8cb8");
+    ctx.restore();
+  }
+
+  function draw() {
+    if(!ctx) return;
+    drawBackground();
+    items.forEach(drawItem);
+    particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/35);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;});
+    drawPlayer();
+  }
+
+  function updateHud() {
+    $("score").textContent=score;
+    $("time").textContent=Math.max(0,Math.ceil(timeLeft));
+    $("progressFill").style.width=Math.min(100,score/TARGET*100)+"%";
+  }
+
+  function spawn() {
+    const heart = Math.random() > .16;
+    items.push({
+      type: heart ? "heart" : "cloud",
+      x: 24 + Math.random() * (W - 48),
+      y: -25,
+      size: heart ? 24 + Math.random() * 8 : 27,
+      speed: heart ? 85 + Math.random() * 75 : 95 + Math.random() * 65,
+      color: ["#ff5c9a","#ff7eb3","#f04f91","#ff9fbe"][Math.floor(Math.random() * 4)]
+    });
+  }
+
+  function burst(x,y,color) {
+    for(let i=0;i<9;i++) particles.push({x,y,vx:(Math.random()-.5)*150,vy:(Math.random()-.8)*130,life:20+Math.random()*18,r:2+Math.random()*3,color});
+  }
+
+  function frame(now) {
+    if(!running) return;
+    raf=requestAnimationFrame(frame);
+    if(paused){lastTime=now;draw();return;}
+    const dt=Math.min((now-lastTime)/1000||0,0.04); lastTime=now;
+    timeLeft-=dt;
+    spawnTimer-=dt;
+    if(spawnTimer<=0){
+      spawn();
+      spawnTimer=Math.max(.22, .55 - (score / TARGET) * 0.22);
+    }
+    const follow=Math.min(1,dt*12);
+    player.x+=(player.tx-player.x)*follow; player.y+=(player.ty-player.y)*follow;
+    items.forEach(item=>item.y+=item.speed*dt);
+    particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt*60;});
+    particles=particles.filter(p=>p.life>0);
+    items=items.filter(item=>{
+      const caught=Math.abs(item.x-player.x)<29 && Math.abs(item.y-(player.y-4))<27;
+      if(caught){
+        if(item.type==="heart"){
+          score++;
+          burst(item.x,item.y,item.color);
+          $("toast").textContent=["Так держать, Диана! 💖","Отличная реакция! ✨","Сердечко поймано! 💕","Ещё одно! 🌸"][score%4];
+        } else {
+          score=Math.max(0,score-1);
+          burst(item.x,item.y,"#a5b0c7");
+          $("toast").textContent="Ой, тучка! −1 очко ☁️";
+        }
+        updateHud(); return false;
+      }
+      return item.y < H+35;
+    });
+    updateHud(); draw();
+    if(score>=TARGET){finish(true);return;}
+    if(timeLeft<=0){finish(false);}
+  }
+
+  function moveTo(e) {
+    const rect=canvas.getBoundingClientRect();
+    player.tx=Math.max(28,Math.min(W-28,e.clientX-rect.left));
+    player.ty=H-42;
+  }
+
+  canvas.addEventListener("pointerdown",e=>{e.preventDefault();moveTo(e);if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId);});
+  canvas.addEventListener("pointermove",e=>{if(e.buttons || e.pointerType==="touch") {e.preventDefault();moveTo(e);}});
+  $("startBtn").addEventListener("click",startGame);
+  $("pauseBtn").addEventListener("click",()=>{
+    if(!running)return;
+    paused=!paused; $("pauseBtn").textContent=paused?"Продолжить ▶":"Пауза Ⅱ";
+    $("toast").textContent=paused?"Передохни немного 💗":"Вперёд за сердечками! 💞";
+  });
+  $("againBtn").addEventListener("click",startGame);
+
+  function startGame() {
+    score=0; timeLeft=ROUND_SECONDS; lastTime=performance.now(); spawnTimer=.25; items=[]; particles=[];
+    player={x:W/2,y:H-42,tx:W/2,ty:H-42}; running=true; paused=false;
+    $("pauseBtn").textContent="Пауза Ⅱ"; $("toast").textContent="Диана, лови сердечки! 💕";
+    updateHud(); show("playing");
+    resizeCanvas(); cancelAnimationFrame(raf); raf=requestAnimationFrame(frame);
+  }
+
+  function finish(won) {
+    running=false; cancelAnimationFrame(raf);
+    $("resultEmoji").textContent = won ? "🎉💖🎉" : "🧸💗✨";
+    $("resultTitle").textContent = won ? "Диана, ты умничка! Все сердечки собраны!" : "Время вышло, но ты всё равно супер!";
+    $("finalMessage").textContent = won
+      ? "С днём рождения, Диана! 🎂✨\n\nТы собрала все " + score + " сердечек! Пусть каждый день дарит тебе столько же тепла, искренних улыбок и настоящего счастья. Желаю исполнения самых заветных желаний, лёгкости, красоты вокруг и людей рядом, которые тебя по-настоящему ценят и любят! ❤️"
+      : "С днём рождения, Диана! 🎂✨\n\nТы поймала " + score + " сердечек — отличный результат! Пусть каждое из них принесёт тебе радость, удачу и прекрасное настроение. Оставайся такой же яркой и замечательной! 💕";
+    
+    if(score>bestScore){
+      bestScore=score;
+      try{localStorage.setItem("heartCatchBest_Diana",String(bestScore));}catch(_){}
+    }
+    $("best").textContent=bestScore;
+    show("result");
+  }
+
+  window.addEventListener("resize",()=>{if(!playScreen.classList.contains("hidden"))resizeCanvas();});
+  window.addEventListener("orientationchange",()=>setTimeout(resizeCanvas,150));
+  document.addEventListener("visibilitychange",()=>{
+    if(document.hidden&&running&&!paused){
+      paused=true; $("pauseBtn").textContent="Продолжить ▶"; $("toast").textContent="Игра на паузе 💗";
+    }
+  });
+
+  requestAnimationFrame(resizeCanvas);
+})();
+</script>
+</body>
+</html>
